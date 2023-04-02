@@ -22,9 +22,11 @@
 // - [x] 메뉴 삭제시 브라우저에서 제공하는 confirm 인터페이스를 활용한다.
 
 // TODO localStrorage Read & Write
-// - [ ] localStorage에 데이터를 저장
+// - [x] localStorage에 데이터를 저장
+//    - [x] 메뉴 추가
+//    - [] 메뉴 수정
+//    - [] 메뉴 삭제
 // - [ ] localStorage에 저장된 데이터를 읽어온다.
-
 // TODO 카테고리별 메뉴판 관리
 // - [ ] 에스프레소 메뉴판 관리
 // - [ ] 프라푸치노 메뉴판 관리
@@ -70,9 +72,9 @@ function App() {
     this.menu.push({ name: espressoMenuName });
     store.setLocalStorage(this.menu);
     const template = this.menu
-      .map((item) => {
+      .map((item, index) => {
         return `
-        <li class="menu-list-item d-flex items-center py-2">
+        <li data-menu-id=${index} class="menu-list-item d-flex items-center py-2">
             <span class="w-100 pl-2 menu-name">${item.name}</span>
             <button
             type="button"
@@ -95,9 +97,11 @@ function App() {
     $("#espresso-menu-name").value = "";
   };
   const updateMenuName = (e) => {
+    const menuId = e.target.closest("li").dataset.menuId;
     const $menuName = e.target.closest("li").querySelector(".menu-name");
     const updatedMenuName = prompt("메뉴명을 수정하세요", $menuName.innerText);
-
+    this.menu[menuId].name = updatedMenuName;
+    store.setLocalStorage(this.menu);
     $menuName.innerText = updatedMenuName;
   };
   const removeMenuName = (e) => {
