@@ -15,7 +15,7 @@ import MenuApi from "./api/index.js";
 
 // TODO 사용자 경험 부분
 // - [x] API 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert으로 예외처리를 진행한다.
-// - [] 중복되는 메뉴는 추가할 수 없다.
+// - [x] 중복되는 메뉴는 추가할 수 없다.
 
 function App() {
   this.menu = {
@@ -91,6 +91,7 @@ function App() {
     ) {
       alert("이미 등록된 메뉴입니다. 다시 입력해주세요.");
       $("#espresso-menu-name").value = "";
+      return;
     }
     const MenuName = $("#espresso-menu-name").value;
     await MenuApi.createMenu(this.currentCategory, MenuName);
