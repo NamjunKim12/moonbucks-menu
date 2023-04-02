@@ -24,9 +24,10 @@
 // TODO localStrorage Read & Write
 // - [x] localStorage에 데이터를 저장
 //    - [x] 메뉴 추가
-//    - [] 메뉴 수정
-//    - [] 메뉴 삭제
-// - [ ] localStorage에 저장된 데이터를 읽어온다.
+//    - [x] 메뉴 수정
+//    - [x] 메뉴 삭제
+// - [x] localStorage에 저장된 데이터를 읽어온다.
+
 // TODO 카테고리별 메뉴판 관리
 // - [ ] 에스프레소 메뉴판 관리
 // - [ ] 프라푸치노 메뉴판 관리
@@ -52,12 +53,46 @@ const store = {
     localStorage.setItem("menu", JSON.stringify(menu));
   },
   getLocalStorage() {
-    localStorage.getItem("menu");
+    return JSON.parse(localStorage.getItem("menu"));
   },
 };
 
 function App() {
   this.menu = [];
+
+  this.init = () => {
+    if (store.getLocalStorage().length > 1) {
+      this.menu = store.getLocalStorage();
+    }
+    render();
+  };
+
+  const render = () => {
+    const template = this.menu
+      .map((item, index) => {
+        return `
+      <li data-menu-id=${index} class="menu-list-item d-flex items-center py-2">
+          <span class="w-100 pl-2 menu-name">${item.name}</span>
+          <button
+          type="button"
+          class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
+          >
+          수정
+          </button>
+          <button
+          type="button"
+          class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
+          >
+          삭제
+          </button>
+      </li>
+      `;
+      })
+      .join("");
+
+    $("#espresso-menu-list").innerHTML = template;
+    updateMenuCount();
+  };
 
   const updateMenuCount = () => {
     const menuCount = $("#espresso-menu-list").querySelectorAll("li").length;
@@ -71,29 +106,7 @@ function App() {
     const espressoMenuName = $("#espresso-menu-name").value;
     this.menu.push({ name: espressoMenuName });
     store.setLocalStorage(this.menu);
-    const template = this.menu
-      .map((item, index) => {
-        return `
-        <li data-menu-id=${index} class="menu-list-item d-flex items-center py-2">
-            <span class="w-100 pl-2 menu-name">${item.name}</span>
-            <button
-            type="button"
-            class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
-            >
-            수정
-            </button>
-            <button
-            type="button"
-            class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
-            >
-            삭제
-            </button>
-        </li>
-        `;
-      })
-      .join("");
-    $("#espresso-menu-list").innerHTML = template;
-    updateMenuCount();
+    render();
     $("#espresso-menu-name").value = "";
   };
   const updateMenuName = (e) => {
@@ -106,6 +119,9 @@ function App() {
   };
   const removeMenuName = (e) => {
     if (confirm("정말 삭제하시겠습니까?")) {
+      const menuId = e.target.closest("li").dataset.menuId;
+      this.menu.splice(menuId, 1);
+      store.setLocalStorage(this.menu);
       e.target.closest("li").remove();
       updateMenuCount();
     }
@@ -136,3 +152,4 @@ function App() {
 }
 
 const app = new App();
+app.init();
