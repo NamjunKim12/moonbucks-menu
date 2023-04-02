@@ -2,20 +2,42 @@ import { $ } from "./utils/dom.js";
 import store from "./store/index.js";
 
 // TODO 서버 요청 부분
-// - [] 웹 서버를 띄운다.
-// - [] 서버에 메뉴가 추가될 수 있도록 요청한다.
-// - [] 서버에 카테고리 별 메뉴리스트를 불러온다.
+// - [x] 웹 서버를 띄운다.
+// - [x] 서버에 메뉴가 추가될 수 있도록 요청한다.
+// - [x] 서버에 카테고리 별 메뉴리스트를 불러온다.
 // - [] 서버에 메뉴가 수정 될 수 있도록 요청한다.
 // - [] 서버에 메뉴의 품절상태를 변경할 수 있도록 요청한다.
 // - [] 서버에 메뉴가 삭제 될 수 있도록 요청한다.
 
 // TODO 리팩토링 부분
-// - [] localStorage에 저장하는 로직은 지운다.
-// - [] fetch 비동기 api를 사용하는 부분을 async await을 사용하여 구현한다.
+// - [x] localStorage에 저장하는 로직은 지운다.
+// - [x] fetch 비동기 api를 사용하는 부분을 async await을 사용하여 구현한다.
 
 // TODO 사용자 경험 부분
 // - [] API 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert으로 예외처리를 진행한다.
 // - [] 중복되는 메뉴는 추가할 수 없다.
+
+const BASE_URL = "http://localhost:3000/api";
+
+const MenuApi = {
+  async getAllMenuByCategory(category) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu`);
+    return response.json();
+  },
+
+  async createMenu(category, name) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name }),
+    });
+    if (!response.ok) {
+      console.error("에러가 발생했습니다.");
+    }
+  },
+};
 
 function App() {
   this.menu = {
@@ -27,10 +49,10 @@ function App() {
   };
   this.currentCategory = "espresso";
 
-  this.init = () => {
-    if (store.getLocalStorage()) {
-      this.menu = store.getLocalStorage();
-    }
+  this.init = async () => {
+    this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(
+      this.currentCategory
+    );
     render();
     initEventListener();
   };
@@ -74,14 +96,16 @@ function App() {
     const menuCount = this.menu[this.currentCategory].length;
     $(".menu-count").innerText = `총 ${menuCount}개`;
   };
-  const addMenuName = () => {
+  const addMenuName = async () => {
     if ($("#espresso-menu-name").value === "") {
       alert("값을 입력해주세요");
       return;
     }
     const MenuName = $("#espresso-menu-name").value;
-    this.menu[this.currentCategory].push({ name: MenuName });
-    store.setLocalStorage(this.menu);
+    await MenuApi.createMenu(this.currentCategory, MenuName);
+    this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(
+      this.currentCategory
+    );
     render();
     $("#espresso-menu-name").value = "";
   };
@@ -141,13 +165,16 @@ function App() {
       addMenuName();
     });
 
-    $("nav").addEventListener("click", (e) => {
+    $("nav").addEventListener("click", async (e) => {
       const isCategoryButton =
         e.target.classList.contains("cafe-category-name");
       if (isCategoryButton) {
         const categoryName = e.target.dataset.categoryName;
         this.currentCategory = categoryName;
         $("#category-title").innerText = `${e.target.innerText} 메뉴 관리`;
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(
+          this.currentCategory
+        );
         render();
       }
     });
